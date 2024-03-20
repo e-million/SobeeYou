@@ -1,0 +1,149 @@
+﻿@model SobeeYou.Models.TUser
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Account</title>
+    <link rel="stylesheet" href="~/Content/styles.css">
+    <style>
+        .account-container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .account-section {
+            border: 1px solid #ccc;
+            padding: 20px; 
+            margin-bottom: 20px;
+            width: 48%;
+        }
+
+        .account-info {
+            margin-right: 20px;
+        }
+
+            .account-info p {
+                margin-bottom: 10px;
+            }
+
+            .account-info label {
+                display: inline-block;
+                width: 120px;
+                font-weight: bold;
+            }
+
+            .account-info input {
+                width: 200px;
+            }
+    </style>
+</head>
+<body>
+    <div class="account-container">
+        <div class="account-info account-section">
+            <h2>Account Information</h2>
+            <p>
+                <label>First Name:</label>
+                <input type="text" id="strfirstName" value="@Model.strFirstName" readonly>
+            </p>
+            <p>
+                <label>Last Name:</label>
+                <input type="text" id="strlastName" value="@Model.strLastName" readonly>
+            </p>
+            <p>
+                <label>Email:</label>
+                <input type="text" id="strEmail" value="@Model.strEmail" readonly>
+            </p>
+            <p>
+                <label>Password:</label>
+                <input type="password" id="strPassword" value="@Model.strPassword" readonly>
+            </p>
+            <p>
+                <label>Billing Address:</label>
+                <input type="text" id="strBillingAddress" value="@Model.strBillingAddress" readonly>
+            </p>
+            <p>
+                <label>Shipping Address:</label>
+                <input type="text" id="strShippingAddress" value="@Model.strShippingAddress" readonly>
+            </p>
+            <button id="editButton">Edit Profile</button>
+            <button id="saveChanges" style="display: none;">Save Changes</button>
+        </div>
+
+        <div class="order-history account-section">
+            <h2>Order History</h2>
+            @if (Model.TOrders != null && Model.TOrders.Any())
+            {
+                <ul>
+                    @foreach (var order in Model.TOrders)
+                    {
+                        <li>Order ID: @order.intOrderID - Date: @order.dtmOrderDate.ToShortDateString()</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p>You have no order history.</p>
+            }
+        </div>
+    </div>
+
+    <script>
+        // Get the edit button and save changes button
+        var editButton = document.getElementById("editButton");
+        var saveChangesButton = document.getElementById("saveChanges");
+
+        // Get all the input fields
+        var inputFields = document.querySelectorAll(".account-info input");
+
+        // Handle edit button click
+        editButton.addEventListener("click", function () {
+            // Enable the input fields
+            inputFields.forEach(function (field) {
+                field.readOnly = false;
+            });
+
+            // Show the save changes button
+            saveChangesButton.style.display = "inline-block";
+        });
+
+        // Handle save changes button click
+        saveChangesButton.addEventListener("click", function () {
+            var currentUserID = @Model.intUserID;
+            var updatedData = {};
+
+            // Collect the updated values from the input fields
+            inputFields.forEach(function (field) {
+                updatedData[field.id] = field.value;
+            });
+
+            // Send an AJAX request to the server
+            fetch('@Url.Action("UpdateProfile", "Account")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userID: currentUserID, updatedData: updatedData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Disable the input fields
+                    inputFields.forEach(function (field) {
+                        field.readOnly = true;
+                    });
+
+                    // Hide the save changes button
+                    saveChangesButton.style.display = "none";
+                } else {
+                    console.error('Error:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
